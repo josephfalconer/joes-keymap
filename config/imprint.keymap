@@ -6,8 +6,8 @@
 #include <dt-bindings/zmk/pointing.h>
 #include <dt-bindings/zmk/rgb.h>
 
-#define LAYER_Base 0
-#define LAYER_Paste 5
+#define LAYER_default_layer 0
+#define LAYER_Paste_Layer 5
 
 / {
     macros {
@@ -92,14 +92,14 @@
             label = "&COPYCHANGELAYER";
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp LG(C)>, <&to LAYER_Paste>;
+            bindings = <&kp LG(C)>, <&to LAYER_Paste_Layer>;
         };
 
         PasteChangeLayer: PasteChangeLayer {
             label = "&PASTECHANGELAYER";
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp LG(V)>, <&to LAYER_Base>;
+            bindings = <&kp LG(V)>, <&to LAYER_default_layer>;
         };
     };
 
