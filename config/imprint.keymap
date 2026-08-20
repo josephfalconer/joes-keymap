@@ -6,6 +6,133 @@
 #include <dt-bindings/zmk/pointing.h>
 #include <dt-bindings/zmk/rgb.h>
 
+#define LAYER_Base 0
+#define LAYER_Paste 5
+
+/ {
+    macros {
+        Smile: Smile {
+            label = "&SMILE";
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&kp RS(SEMI)>, <&kp RS(N0)>;
+        };
+
+        ParenthesisMoveLeft: ParenthesisMoveLeft {
+            label = "&PARENTHESISMOVELEFT";
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&kp RS(N9)>, <&kp RS(N0)>, <&kp LEFT>;
+        };
+
+        GraveMoveLeft: GraveMoveLeft {
+            label = "&GRAVEMOVELEFT";
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&kp GRAVE>, <&kp GRAVE>, <&kp LEFT>;
+        };
+
+        DoubleQuotesMoveLeft: DoubleQuotesMoveLeft {
+            label = "&DOUBLEQUOTESMOVELEFT";
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&kp LS(SQT)>, <&kp LS(SQT)>, <&kp LEFT>;
+        };
+
+        thumbsup: thumbsup {
+            label = "&THUMBSUP";
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&kp LS(SEMI)>, <&kp T>, <&kp H>, <&kp U>, <&kp M>, <&kp B>;
+        };
+
+        approved: approved {
+            label = "&APPROVED";
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&kp RS(SEMI)>, <&kp A>, <&kp P>, <&kp P>, <&kp R>, <&kp O>, <&kp V>, <&kp E>, <&kp D>;
+        };
+
+        selectword: selectword {
+            label = "&SELECTWORD";
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&kp RA(RIGHT)>, <&kp RA(RS(LEFT))>;
+        };
+
+        selectline: selectline {
+            label = "&SELECTLINE";
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&kp RG(RIGHT)>, <&kp RG(RS(LEFT))>;
+        };
+
+        SquareBracketsMoveLeft: SquareBracketsMoveLeft {
+            label = "&SQUAREBRACKETSMOVELEFT";
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&kp LBKT>, <&kp RBKT>, <&kp LEFT>;
+        };
+
+        CurlyBracesMoveLeft: CurlyBracesMoveLeft {
+            label = "&CURLYBRACESMOVELEFT";
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&kp LS(LBKT)>, <&kp LS(RBKT)>, <&kp LEFT>;
+        };
+
+        DoubleUnderscore: DoubleUnderscore {
+            label = "&DOUBLEUNDERSCORE";
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&kp LS(MINUS)>, <&kp LS(MINUS)>;
+        };
+
+        CopyChangeLayer: CopyChangeLayer {
+            label = "&COPYCHANGELAYER";
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&kp LG(C)>, <&to LAYER_Paste>;
+        };
+
+        PasteChangeLayer: PasteChangeLayer {
+            label = "&PASTECHANGELAYER";
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&kp LG(V)>, <&to LAYER_Base>;
+        };
+    };
+
+    behaviors {
+        kpholdtap: kpholdtap {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            tapping-term-ms = <200>;
+            bindings = <&kp>, <&kp>;
+            flavor = "balanced";
+            quick-tap-ms = <200>;
+            require-prior-idle-ms = <125>;
+        };
+
+        layerholdtap: layerholdtap {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            tapping-term-ms = <200>;
+            bindings = <&mo>, <&kp>;
+            flavor = "balanced";
+            quick-tap-ms = <200>;
+            require-prior-idle-ms = <125>;
+        };
+
+        tapcapsword: tapcapsword {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            tapping-term-ms = <200>;
+            bindings = <&kp>, <&caps_word>;
+        };
+    };
+};
+
 / {
     chosen { zmk,physical-layout = &physical_layout_imprint_function_row_full_bottom_row; };
 
@@ -74,6 +201,19 @@
 &kp N0  &kp N1  &kp N2  &kp N3  &kp N4                            &kp N6  &kp N7  &kp N8  &kp N9  &kp N0
                                 &kp N1  &kp N2  &kp N3    &kp N4  &kp N5  &kp N6
                                 &kp N7  &kp N8  &kp N9    &kp N0  &kp N1  &kp N2
+            >;
+        };
+
+        Paste_Layer {
+            bindings = <
+&trans  &trans  &trans  &trans  &trans  &trans            &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans  &trans  &trans            &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans  &trans  &trans            &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans  &trans  &trans            &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans  &trans  &trans            &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans  &trans                            &trans  &trans  &trans  &trans  &trans
+                           &trans  &trans  &trans  &trans  &trans  &trans
+               &PasteChangeLayer  &trans  &trans  &trans  &trans  &trans
             >;
         };
     };
