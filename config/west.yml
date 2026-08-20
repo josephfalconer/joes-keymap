@@ -1,0 +1,27 @@
+manifest:
+  remotes:
+    - name: zmkfirmware
+      url-base: https://github.com/zmkfirmware
+    - name: Cyboard-DigitalTailor
+      url-base: https://github.com/Cyboard-DigitalTailor
+    # Additional modules containing boards/shields/custom code can be listed here as well
+    # See https://docs.zephyrproject.org/3.2.0/develop/west/manifest.html#projects
+  projects:
+    - name: zmk
+      remote: zmkfirmware
+      # Pinned to the latest stable ZMK release, matching the Cyboard Studio
+      # firmware stack. To track current ZMK main (Zephyr 4.1) instead, set
+      # this to main and use the zephyr-4.1 branch of zmk-keyboards below.
+      revision: v0.3.0
+      import: app/west.yml
+    - name: zmk-keyboards
+      remote: Cyboard-DigitalTailor
+      # Pinned to a tagged release so the board and physical-layout
+      # definitions stay frozen: a later change to zmk-keyboards main cannot
+      # shift key positions or binding order under your keymap. Bump this tag
+      # deliberately when you want newer boards/layouts (see the README). To
+      # track current ZMK main (Zephyr 4.1) instead, set this to zephyr-4.1.
+      revision: v2026.07
+      import: config/west.yml
+  self:
+    path: config
