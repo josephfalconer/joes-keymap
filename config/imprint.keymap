@@ -9,6 +9,7 @@
 #define LAYER_default_layer 0
 #define LAYER_Mod_Layer 1
 #define LAYER_Keyboard_Control_Layer 2
+#define LAYER_Dvorak 3
 #define LAYER_Paste_Layer 5
 
 / {
@@ -180,16 +181,16 @@
             >;
         };
 
-        Auto_Mouse_Layer {
+        Dvorak {
             bindings = <
-&trans  &trans  &trans     &trans     &trans     &trans            &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans     &trans     &trans     &trans            &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans     &trans     &trans     &trans            &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &mkp RCLK  &mkp MCLK  &mkp LCLK  &trans            &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans     &trans     &trans     &trans            &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans     &trans     &trans                               &trans  &trans  &trans  &trans  &trans
-                                      &trans     &trans  &trans    &trans  &trans  &trans
-                                      &trans     &trans  &trans    &trans  &trans  &trans
+&trans  &trans    &trans     &trans   &trans  &trans            &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans    &trans     &trans   &trans  &trans            &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &kp SQT   &kp COMMA  &kp DOT  &kp P   &kp Y             &kp F   &kp G   &kp C   &kp R   &kp L   &trans
+&trans  &trans    &kp O      &kp E    &kp U   &kp I             &kp D   &kp H   &kp T   &kp N   &kp S   &kp FSLH
+&trans  &kp SEMI  &kp Q      &kp J    &kp K   &kp X             &kp B   &kp M   &kp W   &kp V   &kp Z   &trans
+&trans  &trans    &trans     &trans   &trans                            &trans  &trans  &trans  &trans  &trans
+                                      &trans  &trans  &trans    &trans  &trans  &trans
+                                      &trans  &trans  &trans    &trans  &trans  &trans
             >;
         };
 
