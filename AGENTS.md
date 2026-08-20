@@ -77,10 +77,10 @@ The required per-line binding counts are therefore:
 12, 12, 12, 12, 12, 10, 6, 6
 ```
 
-The `factory_test` layer is the canonical reference for the **shape and binding
-order** of this grid. Its short bindings are not a reusable source of literal
-space counts for layers containing longer bindings. Longer layers must retain
-the same shape while recalculating their column widths.
+The row counts and logical-column rules below are the canonical reference for
+the **shape and binding order** of this grid. Literal space counts are never
+reusable between layers: each layer must retain this shape while recalculating
+its own column widths.
 
 ### Logical main-board columns
 
