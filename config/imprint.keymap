@@ -8,6 +8,7 @@
 
 #define LAYER_default_layer 0
 #define LAYER_Mod_Layer 1
+#define LAYER_Keyboard_Control_Layer 2
 #define LAYER_Paste_Layer 5
 
 / {
