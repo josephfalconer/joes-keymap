@@ -148,8 +148,8 @@
 &kpholdtap LS(GRAVE) GRAVE  &kpholdtap LCTRL A        &kpholdtap LSHFT R          &kpholdtap LALT S     &kpholdtap LGUI T     &kp G                                     &kp M                 &kpholdtap RGUI N     &kpholdtap RALT E           &kpholdtap RSHFT I          &kpholdtap RCTRL O        &kpholdtap RS(SQT) SQT
 &kp HOME                    &kp Z                     &kp X                       &kp C                 &kp D                 &kp V                                     &kp K                 &kp H                 &kpholdtap LS(COMMA) COMMA  &kpholdtap LS(DOT) DOT      &kpholdtap RS(FSLH) FSLH  &kp PG_UP
 &kp END                     &kpholdtap LS(LBKT) LBKT  &kpholdtap LS(EQUAL) EQUAL  &kp LEFT              &kp RIGHT                                                                             &kp UP                &kp DOWN                    &kpholdtap RS(MINUS) MINUS  &kpholdtap LS(RBKT) RBKT  &kp PG_DN
-                                                                                                        &kp LG(GRAVE)         &kp LG(LA(LEFT))     &kp LG(LA(RIGHT))    &kp LC(UP)            &kp LC(C)             &kp ESC
                                                                                                         &layerholdtap 1 BSPC  &kpholdtap LGUI TAB  &CopyChangeLayer     &tapcapsword CAPS 0   &kp RET               &layerholdtap 1 SPACE
+                                                                                                        &kp LG(GRAVE)         &kp LG(LA(LEFT))     &kp LG(LA(RIGHT))    &kp LC(UP)            &kp LC(C)             &kp ESC
             >;
         };
 
@@ -161,8 +161,8 @@
 &tog 3     &trans                   &mmv MOVE_LEFT    &mmv MOVE_DOWN    &mmv MOVE_RIGHT    &msc MOVE_X(-20)             &trans  &kp LA(LS(LEFT))       &selectword           &kp LA(LS(RIGHT))  &trans                &trans
 &kp PG_UP  &trans                   &mkp RCLK         &mkp MCLK         &mkp LCLK          &kp LA(LG(LS(V)))            &trans  &DoubleQuotesMoveLeft  &ParenthesisMoveLeft  &GraveMoveLeft     &trans                &kp HOME
 &kp PG_DN  &SquareBracketsMoveLeft  &kp LG(GRAVE)     &kp LA(LG(LEFT))  &kp LG(LA(RIGHT))                                       &trans                 &trans                &DoubleUnderscore  &CurlyBracesMoveLeft  &kp END
-                                                                        &trans             &trans  &trans               &trans  &trans                 &trans
                                                                         &kp DEL            &trans  &trans               &trans  &trans                 &trans
+                                                                        &trans             &trans  &trans               &trans  &trans                 &trans
             >;
         };
 
@@ -200,8 +200,8 @@
 &trans  &trans  &trans  &trans  &trans  &trans                       &trans  &trans  &trans  &trans  &trans  &trans
 &trans  &trans  &trans  &trans  &trans  &trans                       &trans  &trans  &trans  &trans  &trans  &trans
 &trans  &trans  &trans  &trans  &trans                                       &trans  &trans  &trans  &trans  &trans
-                                &trans  &trans  &trans               &trans  &trans  &trans
                                 &trans  &trans  &PasteChangeLayer    &trans  &trans  &trans
+                                &trans  &trans  &trans               &trans  &trans  &trans
             >;
         };
     };
