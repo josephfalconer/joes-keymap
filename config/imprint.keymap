@@ -7,6 +7,7 @@
 #include <dt-bindings/zmk/rgb.h>
 
 #define LAYER_default_layer 0
+#define LAYER_Mod_Layer 1
 #define LAYER_Paste_Layer 5
 
 / {
@@ -152,16 +153,16 @@
             >;
         };
 
-        Numpad_Nav_Layer {
+        Mod_Layer {
             bindings = <
-&trans  &trans  &trans  &trans  &trans  &trans            &trans  &trans    &trans    &trans     &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans            &trans  &trans    &trans    &trans     &trans  &trans
-&trans  &trans  &kp N7  &kp N8  &kp N9  &trans            &trans  &kp HOME  &kp UP    &kp END    &trans  &trans
-&trans  &trans  &kp N4  &kp N5  &kp N6  &trans            &trans  &kp LEFT  &kp DOWN  &kp RIGHT  &trans  &trans
-&trans  &trans  &kp N1  &kp N2  &kp N3  &trans            &trans  &trans    &trans    &trans     &trans  &trans
-&trans  &trans  &trans  &kp N0  &trans                            &trans    &trans    &trans     &trans  &trans
-                                &trans  &trans  &trans    &trans  &trans    &trans
-                                &trans  &trans  &trans    &trans  &trans    &trans
+&trans     &trans                   &trans            &trans            &trans             &trans                       &trans  &trans                 &trans                &trans             &trans                &trans
+&trans     &trans                   &trans            &trans            &trans             &trans                       &trans  &trans                 &trans                &trans             &trans                &trans
+&trans     &trans                   &msc MOVE_Y(-20)  &mmv MOVE_UP      &msc MOVE_Y(20)    &msc MOVE_X(20)              &trans  &kp LG(LS(LEFT))       &selectline           &kp LG(LS(RIGHT))  &trans                &trans
+&tog 3     &trans                   &mmv MOVE_LEFT    &mmv MOVE_DOWN    &mmv MOVE_RIGHT    &msc MOVE_X(-20)             &trans  &kp LA(LS(LEFT))       &selectword           &kp LA(LS(RIGHT))  &trans                &trans
+&kp PG_UP  &trans                   &mkp RCLK         &mkp MCLK         &mkp LCLK          &kp LA(LG(LS(V)))            &trans  &DoubleQuotesMoveLeft  &ParenthesisMoveLeft  &GraveMoveLeft     &trans                &kp HOME
+&kp PG_DN  &SquareBracketsMoveLeft  &kp LG(GRAVE)     &kp LA(LG(LEFT))  &kp LG(LA(RIGHT))                                       &trans                 &trans                &DoubleUnderscore  &CurlyBracesMoveLeft  &kp END
+                                                                        &trans             &trans  &trans               &trans  &trans                 &trans
+                                                                        &kp DEL            &trans  &trans               &trans  &trans                 &trans
             >;
         };
 
