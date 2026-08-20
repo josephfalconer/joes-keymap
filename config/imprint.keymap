@@ -141,14 +141,14 @@
 
         default_layer {
             bindings = <
-&kp ESC    &kp F1  &kp F2    &kp F3    &kp F4    &kp F5              &kp F6     &kp F7    &kp F8     &kp F9    &kp F10   &kp F11
-&kp EQUAL  &kp N1  &kp N2    &kp N3    &kp N4    &kp N5              &kp N6     &kp N7    &kp N8     &kp N9    &kp N0    &kp MINUS
-&kp TAB    &kp Q   &kp W     &kp F     &kp R     &kp T               &kp Y      &kp U     &kp I      &kp O     &kp P     &kp BSLH
-&kp LCTRL  &kp A   &kp S     &kp D     &kp F     &kp G               &kp H      &kp J     &kp K      &kp L     &kp SEMI  &kp SQT
-&kp LSHFT  &kp Z   &kp X     &kp C     &kp V     &kp B               &kp N      &kp M     &kp COMMA  &kp DOT   &kp FSLH  &kp RSHFT
-&trans     &trans  &kp LGUI  &kp LALT  &trans                                   &trans    &kp LBKT   &kp RBKT  &trans    &trans
-                                       &kp RET   &kp DEL  &kp ESC    &kp GRAVE  &kp BSPC  &kp SPACE
-                                       &kp LGUI  &mo 1    &mo 2      &kp CAPS   &mo 2     &mo 1
+&kp C_BRI_DN                &Smile                    &approved                   &thumbsup             &kp RC(RG(RS(N4)))    &tog 1                                    &tog 3                &kp RG(RS(N4))        &kp LG(LA(J))               &kp C_VOICE_COMMAND         &kp C_VOL_DN              &kp C_VOL_UP
+&kp RG(RC(Q))               &kpholdtap LS(N1) N1      &kpholdtap LS(N2) N2        &kpholdtap LS(N3) N3  &kpholdtap LS(N4) N4  &kpholdtap LS(N5) N5                      &kpholdtap RS(N6) N6  &kpholdtap RS(N7) N7  &kpholdtap RS(N8) N8        &kpholdtap RS(N9) N9        &kpholdtap RS(N0) N0      &kp C_PP
+&tog 2                      &kp Q                     &kp W                       &kp F                 &kp P                 &kp B                                     &kp J                 &kp L                 &kp U                       &kp Y                       &kpholdtap RS(SEMI) SEMI  &kpholdtap RS(BSLH) BSLH
+&kpholdtap LS(GRAVE) GRAVE  &kpholdtap LCTRL A        &kpholdtap LSHFT R          &kpholdtap LALT S     &kpholdtap LGUI T     &kp G                                     &kp M                 &kpholdtap RGUI N     &kpholdtap RALT E           &kpholdtap RSHFT I          &kpholdtap RCTRL O        &kpholdtap RS(SQT) SQT
+&kp HOME                    &kp Z                     &kp X                       &kp C                 &kp D                 &kp V                                     &kp K                 &kp H                 &kpholdtap LS(COMMA) COMMA  &kpholdtap LS(DOT) DOT      &kpholdtap RS(FSLH) FSLH  &kp PG_UP
+&kp END                     &kpholdtap LS(LBKT) LBKT  &kpholdtap LS(EQUAL) EQUAL  &kp LEFT              &kp RIGHT                                                                             &kp UP                &kp DOWN                    &kpholdtap RS(MINUS) MINUS  &kpholdtap LS(RBKT) RBKT  &kp PG_DN
+                                                                                                        &kp LG(GRAVE)         &kp LG(LA(LEFT))     &kp LG(LA(RIGHT))    &kp LC(UP)            &kp LC(C)             &kp ESC
+                                                                                                        &layerholdtap 1 BSPC  &kpholdtap LGUI TAB  &CopyChangeLayer     &tapcapsword CAPS 0   &kp RET               &layerholdtap 1 SPACE
             >;
         };
 
