@@ -16,91 +16,91 @@
             label = "&SMILE";
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp RS(SEMI)>, <&kp RS(N0)>;
+            bindings = <&kp RS(SEMI) &kp RS(N0)>;
         };
 
         ParenthesisMoveLeft: ParenthesisMoveLeft {
             label = "&PARENTHESISMOVELEFT";
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp RS(N9)>, <&kp RS(N0)>, <&kp LEFT>;
+            bindings = <&kp RS(N9) &kp RS(N0) &kp LEFT>;
         };
 
         GraveMoveLeft: GraveMoveLeft {
             label = "&GRAVEMOVELEFT";
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp GRAVE>, <&kp GRAVE>, <&kp LEFT>;
+            bindings = <&kp GRAVE &kp GRAVE &kp LEFT>;
         };
 
         DoubleQuotesMoveLeft: DoubleQuotesMoveLeft {
             label = "&DOUBLEQUOTESMOVELEFT";
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp LS(SQT)>, <&kp LS(SQT)>, <&kp LEFT>;
+            bindings = <&kp LS(SQT) &kp LS(SQT) &kp LEFT>;
         };
 
         thumbsup: thumbsup {
             label = "&THUMBSUP";
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp LS(SEMI)>, <&kp T>, <&kp H>, <&kp U>, <&kp M>, <&kp B>;
+            bindings = <&kp LS(SEMI) &kp T &kp H &kp U &kp M &kp B>;
         };
 
         approved: approved {
             label = "&APPROVED";
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp RS(SEMI)>, <&kp A>, <&kp P>, <&kp P>, <&kp R>, <&kp O>, <&kp V>, <&kp E>, <&kp D>;
+            bindings = <&kp RS(SEMI) &kp A &kp P &kp P &kp R &kp O &kp V &kp E &kp D>;
         };
 
         selectword: selectword {
             label = "&SELECTWORD";
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp RA(RIGHT)>, <&kp RA(RS(LEFT))>;
+            bindings = <&kp RA(RIGHT) &kp RA(RS(LEFT))>;
         };
 
         selectline: selectline {
             label = "&SELECTLINE";
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp RG(RIGHT)>, <&kp RG(RS(LEFT))>;
+            bindings = <&kp RG(RIGHT) &kp RG(RS(LEFT))>;
         };
 
         SquareBracketsMoveLeft: SquareBracketsMoveLeft {
             label = "&SQUAREBRACKETSMOVELEFT";
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp LBKT>, <&kp RBKT>, <&kp LEFT>;
+            bindings = <&kp LBKT &kp RBKT &kp LEFT>;
         };
 
         CurlyBracesMoveLeft: CurlyBracesMoveLeft {
             label = "&CURLYBRACESMOVELEFT";
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp LS(LBKT)>, <&kp LS(RBKT)>, <&kp LEFT>;
+            bindings = <&kp LS(LBKT) &kp LS(RBKT) &kp LEFT>;
         };
 
         DoubleUnderscore: DoubleUnderscore {
             label = "&DOUBLEUNDERSCORE";
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp LS(MINUS)>, <&kp LS(MINUS)>;
+            bindings = <&kp LS(MINUS) &kp LS(MINUS)>;
         };
 
         CopyChangeLayer: CopyChangeLayer {
             label = "&COPYCHANGELAYER";
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp LG(C)>, <&to LAYER_Paste_Layer>;
+            bindings = <&kp LG(C) &to LAYER_Paste_Layer>;
         };
 
         PasteChangeLayer: PasteChangeLayer {
             label = "&PASTECHANGELAYER";
             compatible = "zmk,behavior-macro";
             #binding-cells = <0>;
-            bindings = <&kp LG(V)>, <&to LAYER_default_layer>;
+            bindings = <&kp LG(V) &to LAYER_default_layer>;
         };
     };
 
@@ -110,6 +110,7 @@
             #binding-cells = <2>;
             tapping-term-ms = <200>;
             bindings = <&kp>, <&kp>;
+
             flavor = "balanced";
             quick-tap-ms = <200>;
             require-prior-idle-ms = <125>;
@@ -120,6 +121,7 @@
             #binding-cells = <2>;
             tapping-term-ms = <200>;
             bindings = <&mo>, <&kp>;
+
             flavor = "balanced";
             quick-tap-ms = <200>;
             require-prior-idle-ms = <125>;
@@ -142,14 +144,14 @@
 
         default_layer {
             bindings = <
-&kp C_BRI_DN                &Smile                    &approved                   &thumbsup             &kp RC(RG(RS(N4)))    &tog 1                                    &tog 3                &kp RG(RS(N4))        &kp LG(LA(J))               &kp C_VOICE_COMMAND         &kp C_VOL_DN              &kp C_VOL_UP
-&kp RG(RC(Q))               &kpholdtap LS(N1) N1      &kpholdtap LS(N2) N2        &kpholdtap LS(N3) N3  &kpholdtap LS(N4) N4  &kpholdtap LS(N5) N5                      &kpholdtap RS(N6) N6  &kpholdtap RS(N7) N7  &kpholdtap RS(N8) N8        &kpholdtap RS(N9) N9        &kpholdtap RS(N0) N0      &kp C_PP
-&tog 2                      &kp Q                     &kp W                       &kp F                 &kp P                 &kp B                                     &kp J                 &kp L                 &kp U                       &kp Y                       &kpholdtap RS(SEMI) SEMI  &kpholdtap RS(BSLH) BSLH
-&kpholdtap LS(GRAVE) GRAVE  &kpholdtap LCTRL A        &kpholdtap LSHFT R          &kpholdtap LALT S     &kpholdtap LGUI T     &kp G                                     &kp M                 &kpholdtap RGUI N     &kpholdtap RALT E           &kpholdtap RSHFT I          &kpholdtap RCTRL O        &kpholdtap RS(SQT) SQT
-&kp HOME                    &kp Z                     &kp X                       &kp C                 &kp D                 &kp V                                     &kp K                 &kp H                 &kpholdtap LS(COMMA) COMMA  &kpholdtap LS(DOT) DOT      &kpholdtap RS(FSLH) FSLH  &kp PG_UP
-&kp END                     &kpholdtap LS(LBKT) LBKT  &kpholdtap LS(EQUAL) EQUAL  &kp LEFT              &kp RIGHT                                                                             &kp UP                &kp DOWN                    &kpholdtap RS(MINUS) MINUS  &kpholdtap LS(RBKT) RBKT  &kp PG_DN
-                                                                                                        &layerholdtap 1 BSPC  &kpholdtap LGUI TAB  &CopyChangeLayer     &kp ESC               &kp RET               &layerholdtap 1 SPACE
-                                                                                                        &kp LG(GRAVE)         &kp LG(LA(LEFT))     &kp LG(LA(RIGHT))    &kp LC(UP)            &kp LC(C)             &tapcapsword CAPS 0
+&kp C_BRI_DN                &Smile                    &approved                   &thumbsup             &kp RC(RG(RS(N4)))    &tog 1                                     &tog 3                &kp RG(RS(N4))        &kp LG(LA(J))               &kp C_VOICE_COMMAND         &kp C_VOL_DN              &kp C_VOL_UP
+&kp RG(RC(Q))               &kpholdtap LS(N1) N1      &kpholdtap LS(N2) N2        &kpholdtap LS(N3) N3  &kpholdtap LS(N4) N4  &kpholdtap LS(N5) N5                       &kpholdtap RS(N6) N6  &kpholdtap RS(N7) N7  &kpholdtap RS(N8) N8        &kpholdtap RS(N9) N9        &kpholdtap RS(N0) N0      &kp C_PP
+&tog 2                      &kp Q                     &kp W                       &kp F                 &kp P                 &kp B                                      &kp J                 &kp L                 &kp U                       &kp Y                       &kpholdtap RS(SEMI) SEMI  &kpholdtap RS(BSLH) BSLH
+&kpholdtap LS(GRAVE) GRAVE  &kpholdtap LCTRL A        &kpholdtap LSHFT R          &kpholdtap LALT S     &kpholdtap LGUI T     &kp G                                      &kp M                 &kpholdtap RGUI N     &kpholdtap RALT E           &kpholdtap RSHFT I          &kpholdtap RCTRL O        &kpholdtap RS(SQT) SQT
+&kp HOME                    &kp Z                     &kp X                       &kp C                 &kp D                 &kp V                                      &kp K                 &kp H                 &kpholdtap LS(COMMA) COMMA  &kpholdtap LS(DOT) DOT      &kpholdtap RS(FSLH) FSLH  &kp PG_UP
+&kp END                     &kpholdtap LS(LBKT) LBKT  &kpholdtap LS(EQUAL) EQUAL  &kp LEFT              &kp RIGHT                                                                              &kp UP                &kp DOWN                    &kpholdtap RS(MINUS) MINUS  &kpholdtap LS(RBKT) RBKT  &kp PG_DN
+                                                                                                        &layerholdtap 1 BSPC  &kpholdtap LGUI TAB   &CopyChangeLayer     &kp ESC               &kp RET               &layerholdtap 1 SPACE
+                                                                                                        &kp LG(GRAVE)         &kp LG(LA(LEFT))      &kp LG(LA(RIGHT))    &kp LC(UP)            &kp LC(C)             &tapcapsword CAPS 0
             >;
         };
 
@@ -158,11 +160,11 @@
 &trans     &trans                   &trans            &trans            &trans             &trans                       &trans  &trans                 &trans                &trans             &trans                &trans
 &trans     &trans                   &trans            &trans            &trans             &trans                       &trans  &trans                 &trans                &trans             &trans                &trans
 &trans     &trans                   &msc MOVE_Y(-20)  &mmv MOVE_UP      &msc MOVE_Y(20)    &msc MOVE_X(20)              &trans  &kp LG(LS(LEFT))       &selectline           &kp LG(LS(RIGHT))  &trans                &trans
-&tog 3     &trans                   &mmv MOVE_LEFT    &mmv MOVE_DOWN    &mmv MOVE_RIGHT    &msc MOVE_X(-20)             &trans  &kp LA(LS(LEFT))       &selectword           &kp LA(LS(RIGHT))  &trans                &trans
+&trans     &trans                   &mmv MOVE_LEFT    &mmv MOVE_DOWN    &mmv MOVE_RIGHT    &msc MOVE_X(-20)             &trans  &kp LA(LS(LEFT))       &selectword           &kp LA(LS(RIGHT))  &trans                &trans
 &kp PG_UP  &trans                   &mkp RCLK         &mkp MCLK         &mkp LCLK          &kp LA(LG(LS(V)))            &trans  &DoubleQuotesMoveLeft  &ParenthesisMoveLeft  &GraveMoveLeft     &trans                &kp HOME
 &kp PG_DN  &SquareBracketsMoveLeft  &kp LG(GRAVE)     &kp LA(LG(LEFT))  &kp LG(LA(RIGHT))                                       &trans                 &trans                &DoubleUnderscore  &CurlyBracesMoveLeft  &kp END
-                                                                        &kp DEL            &trans  &trans               &trans  &trans                 &trans
-                                                                        &trans             &trans  &trans               &trans  &trans                 &trans
+                                                                        &kp DEL            &trans             &trans    &trans  &trans                 &trans
+                                                                        &trans             &trans             &trans    &trans  &trans                 &trans
             >;
         };
 
@@ -170,12 +172,12 @@
             bindings = <
 &trans       &trans        &trans        &trans        &trans        &trans                  &trans           &trans           &trans           &trans           &trans           &trans
 &bt BT_CLR   &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4            &trans           &rgb_ug RGB_TOG  &rgb_ug RGB_EFF  &trans           &trans           &trans
-&sys_reset   &trans        &trans        &trans        &trans        &trans                  &rgb_ug RGB_TOG  &rgb_ug RGB_HUI  &rgb_ug RGB_SAI  &rgb_ug RGB_BRI  &rgb_ug RGB_SPI  &sys_reset
+&trans       &trans        &trans        &trans        &trans        &trans                  &rgb_ug RGB_TOG  &rgb_ug RGB_HUI  &rgb_ug RGB_SAI  &rgb_ug RGB_BRI  &rgb_ug RGB_SPI  &sys_reset
 &bootloader  &trans        &trans        &trans        &trans        &trans                  &trans           &rgb_ug RGB_HUD  &rgb_ug RGB_SAD  &rgb_ug RGB_BRD  &rgb_ug RGB_SPD  &bootloader
 &trans       &trans        &trans        &trans        &trans        &trans                  &trans           &trans           &trans           &trans           &trans           &trans
-&trans       &trans        &trans        &trans        &trans                                                 &trans           &trans           &trans           &trans           &trans
-                                                       &trans        &trans  &trans          &trans           &trans           &trans
-                                                       &trans        &trans  &trans          &trans           &trans           &trans
+&sys_reset   &trans        &trans        &trans        &trans                                                 &trans           &trans           &trans           &trans           &trans
+                                                       &trans        &trans        &trans    &trans           &trans           &trans
+                                                       &trans        &trans        &trans    &trans           &trans           &trans
             >;
         };
 
