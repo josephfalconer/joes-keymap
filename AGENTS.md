@@ -145,14 +145,14 @@ instructions were written, its main-board column starts are:
 
 ```text
 C1   C2   C3   C4   C5    C6    C7    C8    C9    C10   C11   C12
-0    28   54   82   104   126   168   190   212   240   268   294
+0    28   54   82   104   126   165   187   209   237   265   291
 ```
 
 Its thumb starts are:
 
 ```text
 T1   T2   T3   T4   T5   T6
-104  126  147  168  190  212
+104  126  144  165  187  209
 ```
 
 These numeric starts are a regression check for the current bindings, not
