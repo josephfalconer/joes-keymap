@@ -162,9 +162,9 @@ positions.
 
 The current alignment intentionally gives these relationships:
 
-- `&tog 3`, `&kp K`, `&kp LC(UP)`, and `&tapcapsword CAPS 0` share `C7`/`T4`.
+- `&tog 3`, `&kp K`, `&kp LC(UP)`, and `&kp ESC` share `C7`/`T4`.
 - `&kp RG(RS(N4))`, `&kp LC(C)`, and `&kp RET` share `C8`/`T5`.
-- `&kp LG(LA(J))`, `&kp ESC`, and `&layerholdtap 1 SPACE` share `C9`/`T6`.
+- `&kp LG(LA(J))`, `&tapcapsword CAPS 0`, and `&layerholdtap 1 SPACE` share `C9`/`T6`.
 - Row 6 has no binding in `C6` or `C7`; its first right-side binding begins at
   `C8`.
 

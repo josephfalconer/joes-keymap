@@ -148,8 +148,8 @@
 &kpholdtap LS(GRAVE) GRAVE  &kpholdtap LCTRL A        &kpholdtap LSHFT R          &kpholdtap LALT S     &kpholdtap LGUI T     &kp G                                     &kp M                 &kpholdtap RGUI N     &kpholdtap RALT E           &kpholdtap RSHFT I          &kpholdtap RCTRL O        &kpholdtap RS(SQT) SQT
 &kp HOME                    &kp Z                     &kp X                       &kp C                 &kp D                 &kp V                                     &kp K                 &kp H                 &kpholdtap LS(COMMA) COMMA  &kpholdtap LS(DOT) DOT      &kpholdtap RS(FSLH) FSLH  &kp PG_UP
 &kp END                     &kpholdtap LS(LBKT) LBKT  &kpholdtap LS(EQUAL) EQUAL  &kp LEFT              &kp RIGHT                                                                             &kp UP                &kp DOWN                    &kpholdtap RS(MINUS) MINUS  &kpholdtap LS(RBKT) RBKT  &kp PG_DN
-                                                                                                        &layerholdtap 1 BSPC  &kpholdtap LGUI TAB  &CopyChangeLayer     &tapcapsword CAPS 0   &kp RET               &layerholdtap 1 SPACE
-                                                                                                        &kp LG(GRAVE)         &kp LG(LA(LEFT))     &kp LG(LA(RIGHT))    &kp LC(UP)            &kp LC(C)             &kp ESC
+                                                                                                        &layerholdtap 1 BSPC  &kpholdtap LGUI TAB  &CopyChangeLayer     &kp ESC               &kp RET               &layerholdtap 1 SPACE
+                                                                                                        &kp LG(GRAVE)         &kp LG(LA(LEFT))     &kp LG(LA(RIGHT))    &kp LC(UP)            &kp LC(C)             &tapcapsword CAPS 0
             >;
         };
 
