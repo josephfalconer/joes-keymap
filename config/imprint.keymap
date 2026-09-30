@@ -133,6 +133,15 @@
             tapping-term-ms = <200>;
             bindings = <&kp>, <&caps_word>;
         };
+
+        tappasteholdcancel: tappasteholdcancel {
+            compatible = "zmk,behavior-hold-tap";
+            label = "TAPPASTEHOLDCANCEL";
+            bindings = <&to>, <&PasteChangeLayer>;
+
+            #binding-cells = <2>;
+            tapping-term-ms = <200>;
+        };
     };
 };
 
@@ -196,14 +205,14 @@
 
         Paste_Layer {
             bindings = <
-&trans  &trans  &trans  &trans  &trans  &trans                       &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans                       &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans                       &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans                       &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans                       &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans                                       &trans  &trans  &trans  &trans  &trans
-                                &trans  &trans             &trans    &trans  &trans  &trans
-                                &trans  &PasteChangeLayer  &trans    &trans  &trans  &trans
+&trans  &trans  &trans  &trans  &trans  &trans                             &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans  &trans  &trans                             &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans  &trans  &trans                             &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans  &trans  &trans                             &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans  &trans  &trans                             &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans  &trans                                             &trans  &trans  &trans  &trans  &trans
+                                &trans  &trans                   &trans    &trans  &trans  &trans
+                                &trans  &tappasteholdcancel 0 0  &trans    &trans  &trans  &trans
             >;
         };
     };
