@@ -160,7 +160,7 @@
 &kp HOME                    &kp Z                     &kp X                       &kp C                 &kp D                 &kp V                                      &kp K                 &kp H                 &kpholdtap LS(COMMA) COMMA  &kpholdtap LS(DOT) DOT      &kpholdtap RS(FSLH) FSLH  &kp PG_UP
 &kp END                     &kpholdtap LS(LBKT) LBKT  &kpholdtap LS(EQUAL) EQUAL  &kp LEFT              &kp RIGHT                                                                              &kp UP                &kp DOWN                    &kpholdtap RS(MINUS) MINUS  &kpholdtap LS(RBKT) RBKT  &kp PG_DN
                                                                                                         &layerholdtap 1 BSPC  &kp LG(LA(LEFT))      &kp LG(LA(RIGHT))    &kp LC(UP)            &kp RET               &layerholdtap 1 SPACE
-                                                                                                        &kpholdtap LGUI TAB   &CopyChangeLayer      &kp LG(GRAVE)        &kp LC(C)             &kp ESC               &tapcapsword CAPS 0
+                                                                                                        &kpholdtap LGUI TAB   &CopyChangeLayer      &kp LG(GRAVE)        &kp LC(C)             &tapcapsword CAPS 0   &kp ESC
             >;
         };
 
