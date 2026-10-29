@@ -10,6 +10,8 @@
 #include <dt-bindings/zmk/keys.h>
 #include <zmk/behavior.h>
 #include <zmk/events/keycode_state_changed.h>
+#include <zmk/event_manager.h>
+#include <zmk/events/battery_state_changed.h>
 #include <zmk/rgb_underglow.h>
 #include <zmk/workqueue.h>
 #include <zmk/battery.h>
@@ -17,7 +19,6 @@
 #include "indicator_config.h"
 #include "indicators.h"
 #if IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
-#include <zmk/event_manager.h>
 #include <zmk/events/layer_state_changed.h>
 #include <zmk/keymap.h>
 #endif
@@ -58,8 +59,10 @@ static int64_t battery_deadline;
 #define LAYER_MASK (BIT(1) | BIT(2) | BIT(3) | BIT(4))
 K_MUTEX_DEFINE(calibration_lock);
 
-static void refresh(struct k_work *work);
-K_WORK_DELAYABLE_DEFINE(refresh_work, refresh);
+static void calibration_expired(struct k_work *work);
+static void battery_expired(struct k_work *work);
+K_WORK_DELAYABLE_DEFINE(calibration_expiry_work, calibration_expired);
+K_WORK_DELAYABLE_DEFINE(battery_expiry_work, battery_expired);
 
 static bool status_visible(void) {
     bool layers = indicator_layers & (IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
@@ -131,6 +134,7 @@ static int render(void) {
 
 static void restore(void) {
     active = false;
+    k_work_cancel_delayable(&calibration_expiry_work);
     render();
 }
 
@@ -163,17 +167,13 @@ static int proxy_init(const struct device *dev) {
 BUILD_ASSERT(CONFIG_APPLICATION_INIT_PRIORITY > 89);
 DEVICE_DT_DEFINE(PROXY, proxy_init, NULL, NULL, NULL, APPLICATION, 89, &strip_api);
 
-static void refresh(struct k_work *work) {
+/* These run once at the relevant deadline, never as a redraw loop. */
+static void calibration_expired(struct k_work *work) {
     bool expired = false;
     k_mutex_lock(&calibration_lock, K_FOREVER);
     if (active && k_uptime_get() >= deadline) {
         restore();
         expired = true;
-    } else {
-        render();
-    }
-    if (active || status_visible()) {
-        k_work_reschedule_for_queue(zmk_workqueue_lowprio_work_q(), &refresh_work, K_MSEC(250));
     }
     k_mutex_unlock(&calibration_lock);
 #if IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
@@ -184,6 +184,26 @@ static void refresh(struct k_work *work) {
     ARG_UNUSED(expired);
 #endif
 }
+
+static void battery_expired(struct k_work *work) {
+    k_mutex_lock(&calibration_lock, K_FOREVER);
+    if (k_uptime_get() >= battery_deadline) {
+        battery_deadline = 0;
+        render();
+    }
+    k_mutex_unlock(&calibration_lock);
+}
+
+static int battery_changed(const zmk_event_t *event) {
+    k_mutex_lock(&calibration_lock, K_FOREVER);
+    if (k_uptime_get() < battery_deadline) {
+        render();
+    }
+    k_mutex_unlock(&calibration_lock);
+    return ZMK_EV_EVENT_BUBBLE;
+}
+ZMK_LISTENER(indicator_battery, battery_changed);
+ZMK_SUBSCRIPTION(indicator_battery, zmk_battery_state_changed);
 
 /* Snapshot commands never restart the battery timer. A battery request is
  * global, but each half reads its own fuel gauge when rendering the bar. */
@@ -206,13 +226,14 @@ static int status_pressed(struct zmk_behavior_binding *binding,
     if (binding->param1 == 1) {
         battery_deadline = k_uptime_get() + BATTERY_DISPLAY_MS;
         indicators_awake = true;
+        k_work_reschedule_for_queue(zmk_workqueue_lowprio_work_q(), &battery_expiry_work,
+                                    K_MSEC(BATTERY_DISPLAY_MS));
     } else {
         indicator_layers = binding->param2 & LAYER_MASK;
         indicators_enabled = binding->param2 & STATUS_ENABLED;
         indicators_awake = binding->param2 & STATUS_AWAKE;
     }
     render();
-    k_work_reschedule_for_queue(zmk_workqueue_lowprio_work_q(), &refresh_work, K_MSEC(250));
     k_mutex_unlock(&calibration_lock);
     return 0;
 }
@@ -293,11 +314,12 @@ static int pressed(struct zmk_behavior_binding *binding,
         index_selected = binding->param2;
         active = true;
         deadline = k_uptime_get() + TIMEOUT_MS;
+        k_work_reschedule_for_queue(zmk_workqueue_lowprio_work_q(), &calibration_expiry_work,
+                                    K_MSEC(TIMEOUT_MS));
 #if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_EXT_POWER)
         calibration_power(true);
 #endif
         render();
-        k_work_reschedule_for_queue(zmk_workqueue_lowprio_work_q(), &refresh_work, K_MSEC(250));
     }
     k_mutex_unlock(&calibration_lock);
     return 0;

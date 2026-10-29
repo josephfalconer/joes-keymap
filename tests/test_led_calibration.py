@@ -70,6 +70,7 @@ static bool rgb_on, powered, normal_power, ready = true;
 static int64_t now;
 static char typed[10];
 static int typed_length;
+static unsigned frame_count;
 static uint8_t battery_charge;
 static uint8_t zmk_battery_state_of_charge(void) { return battery_charge; }
 enum { ZMK_ACTIVITY_ACTIVE, ZMK_ACTIVITY_IDLE };
@@ -77,6 +78,7 @@ static int activity_state = ZMK_ACTIVITY_ACTIVE;
 static int zmk_activity_get_state(void) { return activity_state; }
 static bool device_is_ready(const struct device *d) { return ready; }
 static int led_strip_update_rgb(const struct device *d, struct led_rgb *p, size_t n) {
+    frame_count++;
     memcpy(hardware, p, n*sizeof(*p));
     memset(p, 0xA5, n*sizeof(*p)); /* Allowed by the real LED API. */
     return 0;
@@ -95,11 +97,21 @@ static void k_msleep(int ms) { now += ms; }
 static void k_mutex_lock(int *m, int timeout) {}
 static void k_mutex_unlock(int *m) {}
 struct k_work { void (*handler)(struct k_work*); };
-struct k_work_delayable { struct k_work work; };
+struct k_work_delayable { struct k_work work; bool pending; int64_t due; };
 #define K_WORK_DEFINE(n,f) struct k_work n = {.handler=f}
 #define K_WORK_DELAYABLE_DEFINE(n,f) struct k_work_delayable n = {.work={.handler=f}}
 static void *zmk_workqueue_lowprio_work_q(void) { return NULL; }
-static int k_work_reschedule_for_queue(void *q, struct k_work_delayable *w, int ms) { return 0; }
+static int k_work_reschedule_for_queue(void *q, struct k_work_delayable *w, int ms) {
+    w->pending=true;
+    w->due=now+ms;
+    return 0;
+}
+static int k_work_cancel_delayable(struct k_work_delayable *w) { w->pending=false; return 0; }
+static void run_scheduled(struct k_work_delayable *w) {
+    if (!w->pending || now<w->due) __builtin_trap();
+    w->pending=false;
+    w->work.handler(&w->work);
+}
 static int k_work_submit_to_queue(void *q, struct k_work *w) { w->handler(w); return 0; }
 static int raise_zmk_keycode_state_changed_from_encoded(uint32_t key, bool pressed, int64_t t) {
     if (pressed) typed[typed_length++] = '0' + key;
@@ -218,7 +230,8 @@ int main(void) {
     command(7,0);
     check_single(TEST_CENTRAL,0);
     now=deadline;
-    refresh(&refresh_work.work);
+    run_scheduled(&calibration_expiry_work);
+    assert(!calibration_expiry_work.pending);
     assert(!active);
 #if TEST_CENTRAL
     assert(deactivated==5);
@@ -237,12 +250,16 @@ int main(void) {
     assert(!powered);
 #endif
     command(1,42);
+    assert(calibration_expiry_work.pending && calibration_expiry_work.due==deadline);
     command(0,0);
+    assert(!calibration_expiry_work.pending);
     check_single(false,0); /* RGB originally off stays off, no saved-setting changes. */
 #if TEST_POWER
     normal_power=true;
     command(1,42);
+    assert(calibration_expiry_work.pending && calibration_expiry_work.due==deadline);
     command(0,0);
+    assert(!calibration_expiry_work.pending);
     assert(powered); /* Preserve ext-power preference even when RGB was off. */
 #endif
     struct zmk_behavior_binding bad={.param1=1,.param2=150};
@@ -275,7 +292,7 @@ class CalibrationTest(unittest.TestCase):
             'zmk/rgb_underglow.h', 'zmk/workqueue.h',
             'zmk/event_manager.h', 'zmk/events/layer_state_changed.h', 'zmk/keymap.h',
             'zmk/battery.h', 'zmk/activity.h', 'zmk/events/activity_state_changed.h',
-            'zephyr/init.h',
+            'zephyr/init.h', 'zmk/events/battery_state_changed.h',
         ]
         with tempfile.TemporaryDirectory() as temp:
             folder = pathlib.Path(temp)

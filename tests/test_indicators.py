@@ -71,9 +71,13 @@ int main(void) {
     int64_t expires=battery_deadline;
     now+=5000;
     status_command(0, STATUS_AWAKE | BIT(1));
-    assert(battery_deadline==expires); /* Layer updates don't extend battery display. */
+    assert(battery_deadline==expires && battery_expiry_work.due==expires); /* Layer updates don't extend battery display. */
+    battery_charge=100;
+    battery_changed(NULL); /* Gauge changes redraw the bar without polling. */
+    assert(hardware[7].g==25 && battery_expiry_work.due==expires);
     now=expires;
-    refresh(&refresh_work.work);
+    run_scheduled(&battery_expiry_work);
+    assert(!battery_expiry_work.pending);
     for (unsigned i=0;i<5;i++) assert(hardware[leds[i]].g==0);
 #if TEST_POWER
     assert(!powered);
@@ -85,9 +89,10 @@ int main(void) {
     status_command(0, STATUS_ENABLED | STATUS_AWAKE | BIT(1));
     assert(cyan(7));
 #if !TEST_CENTRAL
+    unsigned frames=frame_count;
     now+=15000;
-    refresh(&refresh_work.work);
-    assert(cyan(7)); /* Layer lights do not depend on periodic messages. */
+    assert(frame_count==frames && !battery_expiry_work.pending && !calibration_expiry_work.pending);
+    assert(cyan(7)); /* Static layer lights need no scheduled work. */
 #else
     status_command(0, STATUS_ENABLED | STATUS_AWAKE);
     layer_hook=hook;
@@ -138,6 +143,18 @@ int main(void) {
     layer_command(TOGGLE,1,true);
     assert(cyan(7));
 #endif
+    /* Battery expiry during calibration must leave its selected LED alone. */
+    status_command(0, STATUS_ENABLED | STATUS_AWAKE | BIT(1));
+    status_command(1,0);
+    struct zmk_behavior_binding calibration={.param1=1,.param2=42};
+    pressed(&calibration,(struct zmk_behavior_binding_event){0});
+    assert(calibration_expiry_work.pending);
+    now=battery_deadline;
+    run_scheduled(&battery_expiry_work);
+    assert(active && hardware[42].g==(TEST_CENTRAL ? 24 : 0));
+    calibration.param1=0;
+    pressed(&calibration,(struct zmk_behavior_binding_event){0});
+    assert(cyan(7) && !calibration_expiry_work.pending && !battery_expiry_work.pending);
     return 0;
 }
 '''
