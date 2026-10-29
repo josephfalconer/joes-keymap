@@ -1,0 +1,8 @@
+description: Layer switching that distinguishes toggled layers from held layers
+compatible: "joe,indicator-layer"
+include: one_param.yaml
+properties:
+  mode:
+    type: string
+    enum: ["toggle", "momentary", "to"]
+    required: true

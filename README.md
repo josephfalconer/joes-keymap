@@ -3,6 +3,7 @@ Wireless Cyboard keyboard configuration repository template for using ZMK firmwa
 
 For the temporary LED calibration layer, including entry/exit controls and an
 LED-index recording table, see [LED calibration](CALIBRATION.md).
+For the battery bars and persistent-layer lights, see [Indicators](INDICATORS.md).
 
 > **Already have a copy of this template from before July 2026?** The board and
 > layout definitions were reorganized in July 2026, and older copies track the

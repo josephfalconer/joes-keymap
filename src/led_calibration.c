@@ -12,6 +12,10 @@
 #include <zmk/events/keycode_state_changed.h>
 #include <zmk/rgb_underglow.h>
 #include <zmk/workqueue.h>
+#include <zmk/battery.h>
+#include <zmk/activity.h>
+#include "indicator_config.h"
+#include "indicators.h"
 #if IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 #include <zmk/event_manager.h>
 #include <zmk/events/layer_state_changed.h>
@@ -45,7 +49,60 @@ static uint32_t half;
 static uint32_t index_selected;
 static int64_t deadline;
 static bool active;
+static uint32_t indicator_layers;
+static bool indicators_enabled = true;
+static bool indicators_awake = true;
+static int64_t battery_deadline;
+static int64_t status_deadline;
+#define STATUS_ENABLED BIT(8)
+#define STATUS_AWAKE BIT(9)
+#define LAYER_MASK (BIT(1) | BIT(2) | BIT(3) | BIT(4))
 K_MUTEX_DEFINE(calibration_lock);
+
+static void refresh(struct k_work *work);
+K_WORK_DELAYABLE_DEFINE(refresh_work, refresh);
+
+static bool status_visible(void) {
+    bool layers = indicator_layers & (IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+                                      ? LAYER_MASK : (BIT(1) | BIT(2) | BIT(3)));
+    return indicators_awake && ((indicators_enabled && layers) ||
+                                k_uptime_get() < battery_deadline);
+}
+
+static struct led_rgb status_color(uint32_t rgb) {
+    return (struct led_rgb){
+        .r = ((rgb >> 16) & 255) * INDICATOR_BRIGHTNESS_PERCENT / 100,
+        .g = ((rgb >> 8) & 255) * INDICATOR_BRIGHTNESS_PERCENT / 100,
+        .b = (rgb & 255) * INDICATOR_BRIGHTNESS_PERCENT / 100,
+    };
+}
+
+static void paint_status(void) {
+    if (!indicators_awake) {
+        return;
+    }
+    if (indicators_enabled) {
+        const uint8_t layer_leds[] = {0, MOD_LED, CONTROL_LED, DVORAK_LED};
+        for (int layer = 1; layer <= 3; layer++) {
+            if (indicator_layers & BIT(layer)) {
+                output[layer_leds[layer]] = status_color(INDICATOR_COLOR);
+            }
+        }
+        if (IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL) && (indicator_layers & BIT(4))) {
+            output[PASTE_LED] = status_color(INDICATOR_COLOR);
+        }
+    }
+    if (k_uptime_get() < battery_deadline) {
+        const uint8_t leds[] = BATTERY_LED_INDEXES;
+        uint8_t charge = MIN(zmk_battery_state_of_charge(), 100);
+        size_t count = MAX(1, (charge + 19) / 20);
+        uint32_t color = charge < 20 ? BATTERY_COLOR_CRITICAL :
+                         charge < 40 ? BATTERY_COLOR_LOW : BATTERY_COLOR_NORMAL;
+        for (size_t i = 0; i < ARRAY_SIZE(leds); i++) {
+            output[leds[i]] = i < count ? status_color(color) : (struct led_rgb){0};
+        }
+    }
+}
 
 static bool is_selected_half(void) {
     return half == (IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL) ? 1 : 2);
@@ -65,16 +122,17 @@ static int render(void) {
         if (!on) {
             memset(output, 0, sizeof(output));
         }
+        paint_status();
     }
+#if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_EXT_POWER)
+    calibration_power(active || status_visible());
+#endif
     return led_strip_update_rgb(strip, output, PIXELS);
 }
 
 static void restore(void) {
     active = false;
     render();
-#if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_EXT_POWER)
-    calibration_power(false);
-#endif
 }
 
 static int proxy_update(const struct device *dev, struct led_rgb *pixels, size_t count) {
@@ -83,14 +141,7 @@ static int proxy_update(const struct device *dev, struct led_rgb *pixels, size_t
     }
     k_mutex_lock(&calibration_lock, K_FOREVER);
     memcpy(saved, pixels, sizeof(saved));
-    int err;
-    if (active) {
-        err = render();
-    } else {
-        /* Forward unchanged, including the stock driver's off frame. */
-        memcpy(output, saved, sizeof(output));
-        err = led_strip_update_rgb(strip, output, count);
-    }
+    int err = render();
     k_mutex_unlock(&calibration_lock);
     return err;
 }
@@ -113,20 +164,19 @@ static int proxy_init(const struct device *dev) {
 BUILD_ASSERT(CONFIG_APPLICATION_INIT_PRIORITY > 89);
 DEVICE_DT_DEFINE(PROXY, proxy_init, NULL, NULL, NULL, APPLICATION, 89, &strip_api);
 
-static void refresh(struct k_work *work);
-K_WORK_DELAYABLE_DEFINE(refresh_work, refresh);
-
 static void refresh(struct k_work *work) {
     bool expired = false;
     k_mutex_lock(&calibration_lock, K_FOREVER);
+    if (!IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL) && k_uptime_get() >= status_deadline) {
+        indicators_awake = false; /* Don't leave stale layer lights on after losing the central. */
+    }
     if (active && k_uptime_get() >= deadline) {
         restore();
         expired = true;
-    } else if (active) {
-#if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_EXT_POWER)
-        calibration_power(true);
-#endif
+    } else {
         render();
+    }
+    if (active || status_visible()) {
         k_work_reschedule_for_queue(zmk_workqueue_lowprio_work_q(), &refresh_work, K_MSEC(250));
     }
     k_mutex_unlock(&calibration_lock);
@@ -138,6 +188,60 @@ static void refresh(struct k_work *work) {
     ARG_UNUSED(expired);
 #endif
 }
+
+/* Snapshot commands never restart the battery timer. A battery request is
+ * global, but each half reads its own fuel gauge when rendering the bar. */
+static int status_convert(struct zmk_behavior_binding *binding,
+                          struct zmk_behavior_binding_event event) {
+    if (binding->param1 == 2) {
+        binding->param1 = 0;
+        binding->param2 = indicator_layers | (indicators_enabled ? 0 : STATUS_ENABLED) |
+                          (indicators_awake ? STATUS_AWAKE : 0);
+    }
+    return 0;
+}
+
+static int status_pressed(struct zmk_behavior_binding *binding,
+                          struct zmk_behavior_binding_event event) {
+    if (binding->param1 > 1) {
+        return -EINVAL;
+    }
+    k_mutex_lock(&calibration_lock, K_FOREVER);
+    if (binding->param1 == 1) {
+        battery_deadline = k_uptime_get() + BATTERY_DISPLAY_MS;
+        indicators_awake = true;
+        status_deadline = k_uptime_get() + 15000;
+    } else {
+        indicator_layers = binding->param2 & LAYER_MASK;
+        indicators_enabled = binding->param2 & STATUS_ENABLED;
+        indicators_awake = binding->param2 & STATUS_AWAKE;
+        status_deadline = k_uptime_get() + 15000;
+    }
+    render();
+    k_work_reschedule_for_queue(zmk_workqueue_lowprio_work_q(), &refresh_work, K_MSEC(250));
+    k_mutex_unlock(&calibration_lock);
+    return 0;
+}
+
+#if IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
+void imprint_indicators_sync(uint32_t persistent_layers) {
+    /* Zephyr mutexes are recursive: keep snapshot creation and local delivery
+     * together so a periodic refresh cannot undo a concurrent toggle. */
+    k_mutex_lock(&calibration_lock, K_FOREVER);
+    if (persistent_layers == UINT32_MAX) {
+        persistent_layers = indicator_layers;
+    }
+    struct zmk_behavior_binding binding = {
+        .behavior_dev = DEVICE_DT_NAME(DT_NODELABEL(status)),
+        .param2 = (persistent_layers & LAYER_MASK) |
+                  (indicators_enabled ? STATUS_ENABLED : 0) |
+                  (zmk_activity_get_state() == ZMK_ACTIVITY_ACTIVE ? STATUS_AWAKE : 0),
+    };
+    struct zmk_behavior_binding_event event = {.timestamp = k_uptime_get()};
+    zmk_behavior_invoke_binding(&binding, event, true);
+    k_mutex_unlock(&calibration_lock);
+}
+#endif
 
 /* Resolve relative commands centrally, then send absolute state to BOTH halves.
  * A missed command or a reconnected half cannot accumulate an index offset. */
@@ -249,6 +353,40 @@ static const struct behavior_driver_api calibration_api = {
 
 BEHAVIOR_DT_DEFINE(DT_NODELABEL(ledcal), NULL, NULL, NULL, NULL, POST_KERNEL,
                    CONFIG_KERNEL_INIT_PRIORITY_DEFAULT, &calibration_api);
+
+#if IS_ENABLED(CONFIG_ZMK_BEHAVIOR_METADATA)
+static const struct behavior_parameter_value_metadata status_actions[] = {{
+    .display_name = "Status command",
+    .type = BEHAVIOR_PARAMETER_VALUE_TYPE_RANGE,
+    .range = {.min = 0, .max = 2},
+}};
+static const struct behavior_parameter_value_metadata status_flags[] = {{
+    .display_name = "Status flags",
+    .type = BEHAVIOR_PARAMETER_VALUE_TYPE_RANGE,
+    .range = {.min = 0, .max = 1023},
+}};
+static const struct behavior_parameter_metadata_set status_sets[] = {{
+    .param1_values = status_actions,
+    .param1_values_len = ARRAY_SIZE(status_actions),
+    .param2_values = status_flags,
+    .param2_values_len = ARRAY_SIZE(status_flags),
+}};
+static const struct behavior_parameter_metadata status_metadata = {
+    .sets = status_sets,
+    .sets_len = ARRAY_SIZE(status_sets),
+};
+#endif
+static const struct behavior_driver_api status_api = {
+    .binding_convert_central_state_dependent_params = status_convert,
+    .binding_pressed = status_pressed,
+    .binding_released = released,
+    .locality = BEHAVIOR_LOCALITY_GLOBAL,
+#if IS_ENABLED(CONFIG_ZMK_BEHAVIOR_METADATA)
+    .parameter_metadata = &status_metadata,
+#endif
+};
+BEHAVIOR_DT_DEFINE(DT_NODELABEL(status), NULL, NULL, NULL, NULL, POST_KERNEL,
+                   CONFIG_KERNEL_INIT_PRIORITY_DEFAULT, &status_api);
 
 #if IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 /* Also clean up when existing &to/macros leave the calibration layer. */

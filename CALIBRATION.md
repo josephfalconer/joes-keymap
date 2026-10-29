@@ -1,9 +1,9 @@
 # LED calibration
 
 This adds layer 5 to the existing keymap, on the pinned ZMK v0.3.0 stack.
-Flash the new firmware to **both halves**. The final battery/layer indicators
-and their proposed key changes are not enabled yet: this step discovers their
-LED indexes while keeping the current bindings usable.
+Flash the new firmware to **both halves**. The measured indexes now drive the
+[battery and layer indicators](INDICATORS.md); calibration remains available
+for checking additional keys.
 
 ## Enter and leave
 
@@ -61,13 +61,13 @@ inside**, regardless of the order in which they occur in the LED strip.
 
 | Target | Left LED index | Right LED index |
 | --- | --- | --- |
-| 20% — outermost, END / Page Down | | |
-| 40% — next inward | | |
-| 60% — middle | | |
-| 80% — next inward | | |
-| 100% — innermost, Right Arrow / Up Arrow | | |
-| Physical V key (base layer) | | Not needed |
-| Paste/cancel thumb key (CopyChangeLayer on base layer) | | Not needed |
+| 20% — outermost, END / Page Down | 031 | 031 |
+| 40% — next inward | 025 | 025 |
+| 60% — middle | 019 | 019 |
+| 80% — next inward | 013 | 013 |
+| 100% — innermost, Right Arrow / Up Arrow | 007 | 007 |
+| Physical V key (base layer) | 001 | Not needed |
+| Paste/cancel thumb key (unused by indicators) | 039 | Not needed |
 
 Select the left half first, then reset to 0 and advance through the strip. When
 a target lights, use the index-report key to record its number beside its name.

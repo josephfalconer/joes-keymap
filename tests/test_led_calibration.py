@@ -24,18 +24,26 @@ STUB = r'''
 #define CONFIG_KERNEL_INIT_PRIORITY_DEFAULT 40
 #define IS_ENABLED(x) (x)
 #define BUILD_ASSERT(x) _Static_assert(x, #x)
-#define DT_NODELABEL(x) 0
+#define DT_NODELABEL(x) x
 #define DT_PHANDLE(x,y) 0
 #define DT_PROP(x,y) 150
 #define DT_INST(x,y) 0
 #define DT_PROP_LEN(x,y) 1
 #define DEVICE_DT_GET(x) (&device)
-#define DEVICE_DT_NAME(x) "ledcal"
+#define STRINGIFY(x) #x
+#define DEVICE_DT_NAME(x) STRINGIFY(x)
 #define DEVICE_DT_DEFINE(...)
 #define BEHAVIOR_DT_DEFINE(...)
+#define DT_INST_FOREACH_STATUS_OKAY(x)
+#define SYS_INIT(...)
 #define K_MUTEX_DEFINE(x) int x
 #define K_FOREVER 0
 #define K_MSEC(x) (x)
+#define K_SECONDS(x) ((x)*1000)
+#define K_NO_WAIT 0
+#define BIT(x) (1U << (x))
+#define MIN(a,b) ((a)<(b)?(a):(b))
+#define MAX(a,b) ((a)>(b)?(a):(b))
 #define CLAMP(x,a,b) ((x)<(a)?(a):((x)>(b)?(b):(x)))
 #define ARG_UNUSED(x) (void)(x)
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof((x)[0]))
@@ -52,14 +60,21 @@ STUB = r'''
 #define N7 7
 #define N8 8
 #define N9 9
-struct device { int unused; };
+struct device { const void *config; };
 static struct device device;
+static struct device behavior_device;
+static const struct device *zmk_behavior_get_binding(const char *name) { return &behavior_device; }
 struct led_rgb { uint8_t r,g,b; };
 static struct led_rgb hardware[150];
 static bool rgb_on, powered, normal_power, ready = true;
 static int64_t now;
 static char typed[10];
 static int typed_length;
+static uint8_t battery_charge;
+static uint8_t zmk_battery_state_of_charge(void) { return battery_charge; }
+enum { ZMK_ACTIVITY_ACTIVE, ZMK_ACTIVITY_IDLE };
+static int activity_state = ZMK_ACTIVITY_ACTIVE;
+static int zmk_activity_get_state(void) { return activity_state; }
 static bool device_is_ready(const struct device *d) { return ready; }
 static int led_strip_update_rgb(const struct device *d, struct led_rgb *p, size_t n) {
     memcpy(hardware, p, n*sizeof(*p));
@@ -96,14 +111,29 @@ struct zmk_layer_state_changed { int layer; bool state; };
 typedef struct zmk_layer_state_changed zmk_event_t;
 static const struct zmk_layer_state_changed *as_zmk_layer_state_changed(const zmk_event_t *e) { return e; }
 static int deactivated = -1, invoked_exit;
-static int zmk_keymap_layer_deactivate(int layer) { deactivated = layer; return 0; }
-static int zmk_behavior_invoke_binding(const struct zmk_behavior_binding *b,
-                                      struct zmk_behavior_binding_event e, bool pressed) {
-    if (b->param1==0 && pressed) invoked_exit++;
+static uint32_t active_layers;
+static void (*layer_hook)(int, bool);
+static int zmk_keymap_layer_deactivate(int layer) {
+    deactivated = layer;
+    bool was = active_layers & BIT(layer);
+    active_layers &= ~BIT(layer);
+    if (was && layer_hook) layer_hook(layer, false);
     return 0;
 }
+static int zmk_keymap_layer_activate(int layer) {
+    bool was = active_layers & BIT(layer);
+    active_layers |= BIT(layer);
+    if (!was && layer_hook) layer_hook(layer, true);
+    return 0;
+}
+static int zmk_keymap_layer_to(int layer) {
+    for (int i=5; i>=0; i--) zmk_keymap_layer_deactivate(i);
+    return zmk_keymap_layer_activate(layer);
+}
+static int zmk_behavior_invoke_binding(const struct zmk_behavior_binding *b,
+                                      struct zmk_behavior_binding_event e, bool pressed);
 enum { BEHAVIOR_LOCALITY_GLOBAL };
-enum { BEHAVIOR_PARAMETER_VALUE_TYPE_RANGE };
+enum { BEHAVIOR_PARAMETER_VALUE_TYPE_RANGE, BEHAVIOR_PARAMETER_VALUE_TYPE_LAYER_ID };
 struct behavior_parameter_value_metadata {
     char *display_name;
     int type;
@@ -129,6 +159,7 @@ struct behavior_driver_api {
 HARNESS = r'''
 #include <assert.h>
 #include "CALIBRATION_SOURCE"
+RUNTIME
 static void command(unsigned action, unsigned index) {
     struct zmk_behavior_binding b = {.param1=action,.param2=index};
     assert(convert(&b,(struct zmk_behavior_binding_event){0}) == 0);
@@ -222,7 +253,20 @@ int main(void) {
 '''
 
 
+RUNTIME = r'''
+static int zmk_behavior_invoke_binding(const struct zmk_behavior_binding *b,
+                                      struct zmk_behavior_binding_event e, bool down) {
+    struct zmk_behavior_binding copy = *b;
+    if (!down) return 0;
+    if (!strcmp(b->behavior_dev,"status")) return status_pressed(&copy,e);
+    if (b->param1==0) invoked_exit++;
+    return pressed(&copy,e);
+}
+'''
+
+
 class CalibrationTest(unittest.TestCase):
+    harness = HARNESS
     def test_both_halves_with_and_without_power_control(self):
         headers = [
             'zephyr/device.h', 'zephyr/drivers/led_strip.h', 'zephyr/drivers/gpio.h', 'zephyr/kernel.h',
@@ -230,6 +274,8 @@ class CalibrationTest(unittest.TestCase):
             'zmk/behavior.h', 'zmk/events/keycode_state_changed.h',
             'zmk/rgb_underglow.h', 'zmk/workqueue.h',
             'zmk/event_manager.h', 'zmk/events/layer_state_changed.h', 'zmk/keymap.h',
+            'zmk/battery.h', 'zmk/activity.h', 'zmk/events/activity_state_changed.h',
+            'zephyr/init.h',
         ]
         with tempfile.TemporaryDirectory() as temp:
             folder = pathlib.Path(temp)
@@ -239,7 +285,9 @@ class CalibrationTest(unittest.TestCase):
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text('#include "stub.h"\n')
             harness = folder / 'test.c'
-            harness.write_text(HARNESS.replace('CALIBRATION_SOURCE', str(ROOT / 'src/led_calibration.c')))
+            harness.write_text(self.harness.replace('CALIBRATION_SOURCE', str(ROOT / 'src/led_calibration.c'))
+                               .replace('LAYERS_SOURCE', str(ROOT / 'src/indicator_layers.c'))
+                               .replace('RUNTIME', RUNTIME))
             for central in (0, 1):
                 for power in (0, 1):
                     for metadata in (0, 1):
