@@ -53,7 +53,6 @@ static uint32_t indicator_layers;
 static bool indicators_enabled = true;
 static bool indicators_awake = true;
 static int64_t battery_deadline;
-static int64_t status_deadline;
 #define STATUS_ENABLED BIT(8)
 #define STATUS_AWAKE BIT(9)
 #define LAYER_MASK (BIT(1) | BIT(2) | BIT(3) | BIT(4))
@@ -167,9 +166,6 @@ DEVICE_DT_DEFINE(PROXY, proxy_init, NULL, NULL, NULL, APPLICATION, 89, &strip_ap
 static void refresh(struct k_work *work) {
     bool expired = false;
     k_mutex_lock(&calibration_lock, K_FOREVER);
-    if (!IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL) && k_uptime_get() >= status_deadline) {
-        indicators_awake = false; /* Don't leave stale layer lights on after losing the central. */
-    }
     if (active && k_uptime_get() >= deadline) {
         restore();
         expired = true;
@@ -210,12 +206,10 @@ static int status_pressed(struct zmk_behavior_binding *binding,
     if (binding->param1 == 1) {
         battery_deadline = k_uptime_get() + BATTERY_DISPLAY_MS;
         indicators_awake = true;
-        status_deadline = k_uptime_get() + 15000;
     } else {
         indicator_layers = binding->param2 & LAYER_MASK;
         indicators_enabled = binding->param2 & STATUS_ENABLED;
         indicators_awake = binding->param2 & STATUS_AWAKE;
-        status_deadline = k_uptime_get() + 15000;
     }
     render();
     k_work_reschedule_for_queue(zmk_workqueue_lowprio_work_q(), &refresh_work, K_MSEC(250));
@@ -225,12 +219,8 @@ static int status_pressed(struct zmk_behavior_binding *binding,
 
 #if IS_ENABLED(CONFIG_ZMK_SPLIT_ROLE_CENTRAL)
 void imprint_indicators_sync(uint32_t persistent_layers) {
-    /* Zephyr mutexes are recursive: keep snapshot creation and local delivery
-     * together so a periodic refresh cannot undo a concurrent toggle. */
+    /* Zephyr mutexes are recursive: create and deliver the snapshot together. */
     k_mutex_lock(&calibration_lock, K_FOREVER);
-    if (persistent_layers == UINT32_MAX) {
-        persistent_layers = indicator_layers;
-    }
     struct zmk_behavior_binding binding = {
         .behavior_dev = DEVICE_DT_NAME(DT_NODELABEL(status)),
         .param2 = (persistent_layers & LAYER_MASK) |

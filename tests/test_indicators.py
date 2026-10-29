@@ -71,7 +71,7 @@ int main(void) {
     int64_t expires=battery_deadline;
     now+=5000;
     status_command(0, STATUS_AWAKE | BIT(1));
-    assert(battery_deadline==expires); /* Reconnect snapshots don't extend battery display. */
+    assert(battery_deadline==expires); /* Layer updates don't extend battery display. */
     now=expires;
     refresh(&refresh_work.work);
     for (unsigned i=0;i<5;i++) assert(hardware[leds[i]].g==0);
@@ -85,11 +85,9 @@ int main(void) {
     status_command(0, STATUS_ENABLED | STATUS_AWAKE | BIT(1));
     assert(cyan(7));
 #if !TEST_CENTRAL
-    now=status_deadline;
+    now+=15000;
     refresh(&refresh_work.work);
-    assert(hardware[7].g==0); /* Disconnect lease expires. */
-    status_command(0, STATUS_ENABLED | STATUS_AWAKE | BIT(1));
-    assert(cyan(7)); /* Full snapshot restores state after reconnect. */
+    assert(cyan(7)); /* Layer lights do not depend on periodic messages. */
 #else
     status_command(0, STATUS_ENABLED | STATUS_AWAKE);
     layer_hook=hook;
@@ -134,7 +132,7 @@ int main(void) {
     layer_command(TO,5,true); /* Existing calibration entry clears persistent layers. */
     assert(!indicator_layers);
     activity_state=ZMK_ACTIVITY_IDLE;
-    sync_state(&sync_work.work);
+    imprint_indicators_sync(persistent);
     assert(!indicators_awake);
     activity_state=ZMK_ACTIVITY_ACTIVE;
     layer_command(TOGGLE,1,true);

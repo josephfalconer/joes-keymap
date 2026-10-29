@@ -62,7 +62,7 @@ Colours, brightness (initially 10%), duration, and measured LED indexes are in
 [`src/indicator_config.h`](src/indicator_config.h). Changing these requires a
 rebuild and reflash.
 
-## Studio and reconnects
+## Studio and split updates
 
 If you've saved bindings in Studio, they may override the firmware defaults.
 Record any live changes you want to keep before restoring the firmware's
@@ -70,10 +70,11 @@ default keymap. The new controls and status-aware layer behaviors need to be
 in the active keymap; old Studio bindings using stock layer behaviors won't
 track persistent activation.
 
-The central sends a complete layer-status snapshot every five seconds, so the
-right half recovers its current indicators after reconnecting. Each half reads
-its own battery locally. The right half blanks stale indicators after fifteen
-seconds without a snapshot. Snapshots do not restart battery displays.
+Layer switching, the indicator toggle, and activity changes send status updates
+to both halves. There are no periodic Bluetooth status messages or stale-light
+timeouts. After a half restarts or disconnects, its layer lights may be out of
+sync until the next status update. Each half reads its own battery locally;
+layer updates do not restart battery displays.
 
 ## Checks
 
@@ -85,6 +86,6 @@ git diff --check
 
 Host simulations cover both halves, external power and Studio metadata options,
 hold versus toggle behavior, paste/cancel, overlapping holds, animations, RGB-off
-operation, battery thresholds, expiry, and stale/reconnected state. Firmware
+operation, battery thresholds, expiry, and lights without periodic updates. Firmware
 compilation still uses the existing GitHub Actions build; physical split and
 lighting behavior need checking after flashing.

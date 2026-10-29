@@ -1,7 +1,6 @@
 /* SPDX-License-Identifier: MIT */
 #define DT_DRV_COMPAT joe_indicator_layer
 #include <zephyr/device.h>
-#include <zephyr/init.h>
 #include <zephyr/kernel.h>
 #include <drivers/behavior.h>
 #include <zmk/behavior.h>
@@ -15,7 +14,6 @@ struct layer_config { enum layer_mode mode; };
 #include <zmk/event_manager.h>
 #include <zmk/events/layer_state_changed.h>
 #include <zmk/events/activity_state_changed.h>
-#include <zmk/workqueue.h>
 
 #define LAYERS 6
 static uint32_t persistent;
@@ -84,19 +82,6 @@ ZMK_LISTENER(indicator_layers, layers_changed);
 ZMK_SUBSCRIPTION(indicator_layers, zmk_layer_state_changed);
 ZMK_SUBSCRIPTION(indicator_layers, zmk_activity_state_changed);
 
-/* Refresh full snapshots after a right-half reconnect, including OFF states.
- * Battery timers are local and aren't extended by these five-second updates. */
-static void sync_state(struct k_work *work);
-K_WORK_DELAYABLE_DEFINE(sync_work, sync_state);
-static void sync_state(struct k_work *work) {
-    imprint_indicators_sync(UINT32_MAX);
-    k_work_reschedule_for_queue(zmk_workqueue_lowprio_work_q(), &sync_work, K_SECONDS(5));
-}
-static int start_sync(void) {
-    k_work_reschedule_for_queue(zmk_workqueue_lowprio_work_q(), &sync_work, K_NO_WAIT);
-    return 0;
-}
-SYS_INIT(start_sync, APPLICATION, 91);
 #else
 /* Layer behaviors execute on the central, unlike the global LED behaviors. */
 static int layer_press(struct zmk_behavior_binding *binding,
