@@ -1,6 +1,9 @@
 # ZMK Configuration Template
 Wireless Cyboard keyboard configuration repository template for using ZMK firmware. [Instructions for use are located on our documentation site](https://docs.cyboard.digital/user-manual/quick-start/configure-layout).
 
+For the temporary LED calibration layer, including entry/exit controls and an
+LED-index recording table, see [LED calibration](CALIBRATION.md).
+
 > **Already have a copy of this template from before July 2026?** The board and
 > layout definitions were reorganized in July 2026, and older copies track the
 > moving `main` branch — so a rebuild can silently break your keymap (most often

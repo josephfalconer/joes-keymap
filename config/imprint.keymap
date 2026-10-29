@@ -9,9 +9,22 @@
 #define LAYER_Keyboard_Control_Layer 2
 #define LAYER_Dvorak 3
 #define LAYER_Paste_Layer 4
+#define LAYER_LED_Calibration 5
 
 / {
     macros {
+        calibration_enter: calibration_enter {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&ledcal 1 0 &to LAYER_LED_Calibration>;
+        };
+
+        calibration_exit: calibration_exit {
+            compatible = "zmk,behavior-macro";
+            #binding-cells = <0>;
+            bindings = <&ledcal 0 0 &to LAYER_default_layer>;
+        };
+
         Smile: Smile {
             label = "&SMILE";
             compatible = "zmk,behavior-macro";
@@ -105,6 +118,11 @@
     };
 
     behaviors {
+        ledcal: ledcal {
+            compatible = "joe,led-calibration";
+            #binding-cells = <2>;
+        };
+
         kpholdtap: kpholdtap {
             compatible = "zmk,behavior-hold-tap";
             #binding-cells = <2>;
@@ -146,7 +164,17 @@
 };
 
 / {
-    chosen { zmk,physical-layout = &physical_layout_imprint_function_row_full_bottom_row; };
+    chosen {
+        zmk,physical-layout = &physical_layout_imprint_function_row_full_bottom_row;
+        zmk,underglow = &calibration_strip;
+    };
+
+    // Same strip length as the pinned Imprint shield; no LED/key mapping assumed.
+    calibration_strip: calibration_strip {
+        compatible = "joe,calibration-strip";
+        strip = <&led_strip>;
+        chain-length = <150>;
+    };
 
     keymap {
         compatible = "zmk,keymap";
@@ -179,14 +207,14 @@
 
         Keyboard_Control_Layer {
             bindings = <
-&trans       &trans        &trans        &trans        &trans        &trans                  &trans           &trans           &trans           &trans           &trans           &trans
-&bt BT_CLR   &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4            &trans           &rgb_ug RGB_TOG  &rgb_ug RGB_EFF  &trans           &trans           &trans
-&trans       &trans        &trans        &trans        &trans        &trans                  &rgb_ug RGB_TOG  &rgb_ug RGB_HUI  &rgb_ug RGB_SAI  &rgb_ug RGB_BRI  &rgb_ug RGB_SPI  &sys_reset
-&bootloader  &trans        &trans        &trans        &trans        &trans                  &trans           &rgb_ug RGB_HUD  &rgb_ug RGB_SAD  &rgb_ug RGB_BRD  &rgb_ug RGB_SPD  &bootloader
-&trans       &trans        &trans        &trans        &trans        &trans                  &trans           &trans           &trans           &trans           &trans           &trans
-&sys_reset   &trans        &trans        &trans        &trans                                                 &trans           &trans           &trans           &trans           &trans
-                                                       &trans        &trans        &trans    &trans           &trans           &trans
-                                                       &trans        &trans        &trans    &trans           &trans           &trans
+&trans       &trans        &trans        &trans        &trans        &trans            &trans           &trans           &trans           &trans           &trans           &calibration_enter
+&bt BT_CLR   &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4      &trans           &rgb_ug RGB_TOG  &rgb_ug RGB_EFF  &trans           &trans           &trans
+&trans       &trans        &trans        &trans        &trans        &trans            &rgb_ug RGB_TOG  &rgb_ug RGB_HUI  &rgb_ug RGB_SAI  &rgb_ug RGB_BRI  &rgb_ug RGB_SPI  &sys_reset
+&bootloader  &trans        &trans        &trans        &trans        &trans            &trans           &rgb_ug RGB_HUD  &rgb_ug RGB_SAD  &rgb_ug RGB_BRD  &rgb_ug RGB_SPD  &bootloader
+&trans       &trans        &trans        &trans        &trans        &trans            &trans           &trans           &trans           &trans           &trans           &trans
+&sys_reset   &trans        &trans        &trans        &trans                                           &trans           &trans           &trans           &trans           &trans
+                                                       &trans        &trans  &trans    &trans           &trans           &trans
+                                                       &trans        &trans  &trans    &trans           &trans           &trans
             >;
         };
 
@@ -213,6 +241,19 @@
 &trans  &trans  &trans  &trans  &trans                                             &trans  &trans  &trans  &trans  &trans
                                 &trans  &trans                   &trans    &trans  &trans  &trans
                                 &trans  &tappasteholdcancel 0 0  &trans    &trans  &trans  &trans
+            >;
+        };
+
+        LED_Calibration {
+            bindings = <
+&calibration_exit  &ledcal 9 0  &ledcal 7 0  &ledcal 8 0  &ledcal 10 0  &none             &ledcal 5 0  &ledcal 3 0  &ledcal 4 0  &ledcal 6 0  &ledcal 10 0  &calibration_exit
+&trans             &trans       &trans       &trans       &trans        &trans            &trans       &trans       &trans       &trans       &trans        &trans
+&trans             &trans       &trans       &trans       &trans        &trans            &trans       &trans       &trans       &trans       &trans        &trans
+&trans             &trans       &trans       &trans       &trans        &trans            &trans       &trans       &trans       &trans       &trans        &trans
+&trans             &trans       &trans       &trans       &trans        &trans            &trans       &trans       &trans       &trans       &trans        &trans
+&trans             &trans       &trans       &trans       &trans                                       &trans       &trans       &trans       &trans        &trans
+                                                          &trans        &trans  &trans    &trans       &trans       &trans
+                                                          &trans        &trans  &trans    &trans       &trans       &trans
             >;
         };
     };

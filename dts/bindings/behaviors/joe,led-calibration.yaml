@@ -1,0 +1,3 @@
+description: Select a half and an absolute LED index for calibration
+compatible: "joe,led-calibration"
+include: two_param.yaml

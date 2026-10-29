@@ -1,0 +1,10 @@
+description: Pass-through RGB strip with a temporary single-LED calibration override
+compatible: "joe,calibration-strip"
+include: base.yaml
+properties:
+  strip:
+    type: phandle
+    required: true
+  chain-length:
+    type: int
+    required: true
