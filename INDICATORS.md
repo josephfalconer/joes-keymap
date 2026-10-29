@@ -20,8 +20,8 @@ After a status light clears, its key returns to the animation or turns off.
 Indicators blank while the keyboard is idle and return when it wakes.
 Static indicators do not run a repeating redraw task. Changes redraw the lights
 immediately; battery display and calibration use one-shot expiry timers.
-Battery-reading changes update a visible bar, and stock RGB animations retain
-their existing update loop.
+Battery levels are sampled when the button is pressed. Stock RGB animations
+retain their existing update loop.
 
 ## Layer lights
 

@@ -11,7 +11,6 @@
 #include <zmk/behavior.h>
 #include <zmk/events/keycode_state_changed.h>
 #include <zmk/event_manager.h>
-#include <zmk/events/battery_state_changed.h>
 #include <zmk/rgb_underglow.h>
 #include <zmk/workqueue.h>
 #include <zmk/battery.h>
@@ -37,11 +36,15 @@ static const struct device *const strip = DEVICE_DT_GET(REAL_STRIP);
 static const struct device *const power = DEVICE_DT_GET(POWER);
 BUILD_ASSERT(DT_PROP_LEN(POWER, control_gpios) == 1);
 static const struct gpio_dt_spec power_gpio = GPIO_DT_SPEC_GET(POWER, control_gpios);
+static bool power_overridden;
 
 /* ext_power_enable/disable persist their state. Override only the physical pin
  * temporarily, leaving that logical state and its saved preference untouched. */
 static void calibration_power(bool override) {
-    gpio_pin_set_dt(&power_gpio, override ? 1 : ext_power_get(power));
+    if (override || power_overridden) {
+        gpio_pin_set_dt(&power_gpio, override ? 1 : ext_power_get(power));
+    }
+    power_overridden = override;
 }
 #endif
 static struct led_rgb saved[PIXELS];
@@ -54,6 +57,7 @@ static uint32_t indicator_layers;
 static bool indicators_enabled = true;
 static bool indicators_awake = true;
 static int64_t battery_deadline;
+static uint8_t displayed_charge;
 #define STATUS_ENABLED BIT(8)
 #define STATUS_AWAKE BIT(9)
 #define LAYER_MASK (BIT(1) | BIT(2) | BIT(3) | BIT(4))
@@ -96,7 +100,7 @@ static void paint_status(void) {
     }
     if (k_uptime_get() < battery_deadline) {
         const uint8_t leds[] = BATTERY_LED_INDEXES;
-        uint8_t charge = MIN(zmk_battery_state_of_charge(), 100);
+        uint8_t charge = displayed_charge;
         size_t count = MAX(1, (charge + 19) / 20);
         uint32_t color = charge < 20 ? BATTERY_COLOR_CRITICAL :
                          charge < 40 ? BATTERY_COLOR_LOW : BATTERY_COLOR_NORMAL;
@@ -133,6 +137,9 @@ static int render(void) {
 }
 
 static void restore(void) {
+    if (!active) {
+        return;
+    }
     active = false;
     k_work_cancel_delayable(&calibration_expiry_work);
     render();
@@ -189,21 +196,12 @@ static void battery_expired(struct k_work *work) {
     k_mutex_lock(&calibration_lock, K_FOREVER);
     if (k_uptime_get() >= battery_deadline) {
         battery_deadline = 0;
-        render();
+        if (!active && indicators_awake) {
+            render();
+        }
     }
     k_mutex_unlock(&calibration_lock);
 }
-
-static int battery_changed(const zmk_event_t *event) {
-    k_mutex_lock(&calibration_lock, K_FOREVER);
-    if (k_uptime_get() < battery_deadline) {
-        render();
-    }
-    k_mutex_unlock(&calibration_lock);
-    return ZMK_EV_EVENT_BUBBLE;
-}
-ZMK_LISTENER(indicator_battery, battery_changed);
-ZMK_SUBSCRIPTION(indicator_battery, zmk_battery_state_changed);
 
 /* Snapshot commands never restart the battery timer. A battery request is
  * global, but each half reads its own fuel gauge when rendering the bar. */
@@ -224,16 +222,25 @@ static int status_pressed(struct zmk_behavior_binding *binding,
     }
     k_mutex_lock(&calibration_lock, K_FOREVER);
     if (binding->param1 == 1) {
+        displayed_charge = MIN(zmk_battery_state_of_charge(), 100);
         battery_deadline = k_uptime_get() + BATTERY_DISPLAY_MS;
         indicators_awake = true;
         k_work_reschedule_for_queue(zmk_workqueue_lowprio_work_q(), &battery_expiry_work,
                                     K_MSEC(BATTERY_DISPLAY_MS));
     } else {
+        if (indicator_layers == (binding->param2 & LAYER_MASK) &&
+            indicators_enabled == !!(binding->param2 & STATUS_ENABLED) &&
+            indicators_awake == !!(binding->param2 & STATUS_AWAKE)) {
+            k_mutex_unlock(&calibration_lock);
+            return 0;
+        }
         indicator_layers = binding->param2 & LAYER_MASK;
         indicators_enabled = binding->param2 & STATUS_ENABLED;
         indicators_awake = binding->param2 & STATUS_AWAKE;
     }
-    render();
+    if (!active) {
+        render();
+    }
     k_mutex_unlock(&calibration_lock);
     return 0;
 }
@@ -242,11 +249,25 @@ static int status_pressed(struct zmk_behavior_binding *binding,
 void imprint_indicators_sync(uint32_t persistent_layers) {
     /* Zephyr mutexes are recursive: create and deliver the snapshot together. */
     k_mutex_lock(&calibration_lock, K_FOREVER);
+    uint32_t current = indicator_layers | (indicators_enabled ? STATUS_ENABLED : 0) |
+                       (indicators_awake ? STATUS_AWAKE : 0);
+    uint32_t target = (persistent_layers & LAYER_MASK) |
+                      (indicators_enabled ? STATUS_ENABLED : 0) |
+                      (zmk_activity_get_state() == ZMK_ACTIVITY_ACTIVE ? STATUS_AWAKE : 0);
+    if (current == target) {
+        k_mutex_unlock(&calibration_lock);
+        return;
+    }
+    if (!indicators_enabled && (current & STATUS_AWAKE) == (target & STATUS_AWAKE)) {
+        /* Remember layer changes locally; the next enable command carries the
+         * full mask. Disabled layer lights need no radio traffic or redraw. */
+        indicator_layers = target & LAYER_MASK;
+        k_mutex_unlock(&calibration_lock);
+        return;
+    }
     struct zmk_behavior_binding binding = {
         .behavior_dev = DEVICE_DT_NAME(DT_NODELABEL(status)),
-        .param2 = (persistent_layers & LAYER_MASK) |
-                  (indicators_enabled ? STATUS_ENABLED : 0) |
-                  (zmk_activity_get_state() == ZMK_ACTIVITY_ACTIVE ? STATUS_AWAKE : 0),
+        .param2 = target,
     };
     struct zmk_behavior_binding_event event = {.timestamp = k_uptime_get()};
     zmk_behavior_invoke_binding(&binding, event, true);
@@ -316,9 +337,6 @@ static int pressed(struct zmk_behavior_binding *binding,
         deadline = k_uptime_get() + TIMEOUT_MS;
         k_work_reschedule_for_queue(zmk_workqueue_lowprio_work_q(), &calibration_expiry_work,
                                     K_MSEC(TIMEOUT_MS));
-#if IS_ENABLED(CONFIG_ZMK_RGB_UNDERGLOW_EXT_POWER)
-        calibration_power(true);
-#endif
         render();
     }
     k_mutex_unlock(&calibration_lock);

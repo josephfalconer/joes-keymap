@@ -71,6 +71,7 @@ static int64_t now;
 static char typed[10];
 static int typed_length;
 static unsigned frame_count;
+static unsigned power_write_count, status_messages;
 static uint8_t battery_charge;
 static uint8_t zmk_battery_state_of_charge(void) { return battery_charge; }
 enum { ZMK_ACTIVITY_ACTIVE, ZMK_ACTIVITY_IDLE };
@@ -90,7 +91,11 @@ static int zmk_rgb_underglow_get_state(bool *on) { *on = rgb_on; return 0; }
 struct gpio_dt_spec { int unused; };
 #define GPIO_DT_SPEC_GET(x,y) {0}
 static bool gpio_is_ready_dt(const struct gpio_dt_spec *s) { return ready; }
-static int gpio_pin_set_dt(const struct gpio_dt_spec *s, int value) { powered = value; return 0; }
+static int gpio_pin_set_dt(const struct gpio_dt_spec *s, int value) {
+    power_write_count++;
+    powered = value;
+    return 0;
+}
 static int ext_power_get(const struct device *d) { return normal_power; }
 static int64_t k_uptime_get(void) { return now; }
 static void k_msleep(int ms) { now += ms; }
@@ -196,7 +201,13 @@ int main(void) {
     assert(proxy_update(&device, normal, 150)==0);
     assert(hardware[0].r==12);
     assert(normal[0].r==12); /* Physical driver cannot corrupt stock RGB buffer. */
+    unsigned power_writes=power_write_count;
+    proxy_update(&device, normal,150);
+    assert(power_write_count==power_writes); /* Normal animations don't rewrite LED power. */
     command(1,0);
+#if TEST_POWER
+    assert(power_write_count==power_writes+1); /* One power override per selection, not two. */
+#endif
     assert(active && index_selected==0);
     check_single(TEST_CENTRAL,0);
     command(6,0); /* +10 */
@@ -214,6 +225,9 @@ int main(void) {
     check_single(!TEST_CENTRAL,11); /* Animations cannot overwrite calibration. */
     command(0,0);
     assert(!active && hardware[0].r==12 && hardware[0].g==34);
+    unsigned frames=frame_count;
+    command(0,0);
+    assert(frame_count==frames); /* Duplicate exit from the layer listener does no LED work. */
     rgb_on=false;
     command(2,149);
 #if TEST_POWER
@@ -275,7 +289,10 @@ static int zmk_behavior_invoke_binding(const struct zmk_behavior_binding *b,
                                       struct zmk_behavior_binding_event e, bool down) {
     struct zmk_behavior_binding copy = *b;
     if (!down) return 0;
-    if (!strcmp(b->behavior_dev,"status")) return status_pressed(&copy,e);
+    if (!strcmp(b->behavior_dev,"status")) {
+        status_messages++;
+        return status_pressed(&copy,e);
+    }
     if (b->param1==0) invoked_exit++;
     return pressed(&copy,e);
 }

@@ -47,7 +47,9 @@ static int layer_press(struct zmk_behavior_binding *binding,
         err = -EINVAL;
     }
     switching = false;
-    imprint_indicators_sync(persistent);
+    if (config->mode != MOMENTARY) {
+        imprint_indicators_sync(persistent);
+    }
     return err;
 }
 
@@ -64,7 +66,6 @@ static int layer_release(struct zmk_behavior_binding *binding,
             zmk_keymap_layer_deactivate(layer);
         }
     }
-    imprint_indicators_sync(persistent);
     return 0;
 }
 

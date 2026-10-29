@@ -73,8 +73,9 @@ int main(void) {
     status_command(0, STATUS_AWAKE | BIT(1));
     assert(battery_deadline==expires && battery_expiry_work.due==expires); /* Layer updates don't extend battery display. */
     battery_charge=100;
-    battery_changed(NULL); /* Gauge changes redraw the bar without polling. */
-    assert(hardware[7].g==25 && battery_expiry_work.due==expires);
+    status_command(0, BIT(1));
+    status_command(0, STATUS_AWAKE | BIT(1));
+    assert(hardware[7].g==0 && battery_expiry_work.due==expires); /* Display uses the reading taken at button press. */
     now=expires;
     run_scheduled(&battery_expiry_work);
     assert(!battery_expiry_work.pending);
@@ -88,6 +89,9 @@ int main(void) {
     assert(hardware[7].g==0);
     status_command(0, STATUS_ENABLED | STATUS_AWAKE | BIT(1));
     assert(cyan(7));
+    unsigned unchanged_frames=frame_count;
+    status_command(0, STATUS_ENABLED | STATUS_AWAKE | BIT(1));
+    assert(frame_count==unchanged_frames); /* An identical received update needs no redraw. */
 #if !TEST_CENTRAL
     unsigned frames=frame_count;
     now+=15000;
@@ -96,14 +100,23 @@ int main(void) {
 #else
     status_command(0, STATUS_ENABLED | STATUS_AWAKE);
     layer_hook=hook;
+    unsigned messages=status_messages;
+    unsigned frames=frame_count;
     layer_command(MOMENTARY,1,true);
     assert(active_layers & BIT(1));
     assert(!indicator_layers && hardware[7].g==0);
+    assert(status_messages==messages && frame_count==frames);
     layer_command(TOGGLE,1,true);
     assert(cyan(7));
+    assert(status_messages==messages+1 && frame_count==frames+1);
+    messages=status_messages;
+    frames=frame_count;
     layer_command(MOMENTARY,1,false);
     assert(active_layers & BIT(1)); /* Release a hold without cancelling the toggle. */
     assert(cyan(7));
+    layer_command(TOGGLE,1,false);
+    imprint_indicators_sync(persistent);
+    assert(status_messages==messages && frame_count==frames); /* No release or duplicate messages. */
     layer_command(TOGGLE,1,true);
     assert(!(active_layers & BIT(1)) && hardware[7].g==0);
     layer_command(MOMENTARY,1,true);
@@ -155,6 +168,16 @@ int main(void) {
     calibration.param1=0;
     pressed(&calibration,(struct zmk_behavior_binding_event){0});
     assert(cyan(7) && !calibration_expiry_work.pending && !battery_expiry_work.pending);
+#if TEST_CENTRAL
+    status_command(2,0);
+    messages=status_messages;
+    frames=frame_count;
+    layer_command(TOGGLE,2,true);
+    assert(indicator_layers & BIT(2));
+    assert(status_messages==messages && frame_count==frames);
+    status_command(2,0);
+    assert(cyan(13)); /* Enabling lights uses the latest remembered layer mask. */
+#endif
     return 0;
 }
 '''
